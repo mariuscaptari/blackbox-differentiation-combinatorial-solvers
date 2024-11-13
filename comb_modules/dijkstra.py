@@ -62,20 +62,21 @@ def get_solver(neighbourhood_fn):
 
 
 class ShortestPath(torch.autograd.Function):
-    def __init__(self, lambda_val, neighbourhood_fn="8-grid"):
-        self.lambda_val = lambda_val
-        self.neighbourhood_fn = neighbourhood_fn
-        self.solver = get_solver(neighbourhood_fn)
+    @staticmethod
+    def forward(ctx, weights, lambda_val, neighbourhood_fn="8-grid"):
+        ctx.lambda_val = lambda_val
+        ctx.neighbourhood_fn = neighbourhood_fn
+        ctx.solver = get_solver(neighbourhood_fn)
+        
+        ctx.weights = weights.detach().cpu().numpy()
+        ctx.suggested_tours = np.asarray(maybe_parallelize(ctx.solver, arg_list=list(ctx.weights)))
+        return torch.from_numpy(ctx.suggested_tours).float().to(weights.device)
 
-    def forward(self, weights):
-        self.weights = weights.detach().cpu().numpy()
-        self.suggested_tours = np.asarray(maybe_parallelize(self.solver, arg_list=list(self.weights)))
-        return torch.from_numpy(self.suggested_tours).float().to(weights.device)
-
-    def backward(self, grad_output):
-        assert grad_output.shape == self.suggested_tours.shape
+    @staticmethod
+    def backward(ctx, grad_output):
+        assert grad_output.shape == ctx.suggested_tours.shape
         grad_output_numpy = grad_output.detach().cpu().numpy()
-        weights_prime = np.maximum(self.weights + self.lambda_val * grad_output_numpy, 0.0)
-        better_paths = np.asarray(maybe_parallelize(self.solver, arg_list=list(weights_prime)))
-        gradient = -(self.suggested_tours - better_paths) / self.lambda_val
-        return torch.from_numpy(gradient).to(grad_output.device)
+        weights_prime = np.maximum(ctx.weights + ctx.lambda_val * grad_output_numpy, 0.0)
+        better_paths = np.asarray(maybe_parallelize(ctx.solver, arg_list=list(weights_prime)))
+        gradient = -(ctx.suggested_tours - better_paths) / ctx.lambda_val
+        return torch.from_numpy(gradient).to(grad_output.device), None, None

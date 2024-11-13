@@ -44,6 +44,7 @@ def verify_top_level_params(**kwargs):
 
 def main():
     params = update_params_from_cmdline(verbose=True)
+    # print(params)
     os.makedirs(params.model_dir, exist_ok=True)
     save_settings_to_json(params, params.model_dir)
 
@@ -55,7 +56,7 @@ def main():
             num_cpus=num_cpus,
             logging_level=WARNING,
             ignore_reinit_error=True,
-            redis_max_memory=10 ** 9,
+            # redis_max_memory=10 ** 9,
             log_to_driver=False,
             **params.get("ray_params", {})
         )

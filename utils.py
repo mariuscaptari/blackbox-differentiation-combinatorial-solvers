@@ -387,7 +387,7 @@ def recursive_objectify(nested_dict):
   "Turns a nested_dict into a nested ParamDict"
   result = deepcopy(nested_dict)
   for k, v in result.items():
-    if isinstance(v, collections.Mapping):
+    if isinstance(v, collections.abc.Mapping):
       result[k] = recursive_objectify(v)
   return ParamDict(result)
 
@@ -414,7 +414,7 @@ def update_recursive(d, u, defensive=False):
   for k, v in u.items():
     if defensive and k not in d:
       raise KeyError("Updating a non-existing key")
-    if isinstance(v, collections.Mapping):
+    if isinstance(v, collections.abc.Mapping):
       d[k] = update_recursive(d.get(k, {}), v)
     else:
       d[k] = v

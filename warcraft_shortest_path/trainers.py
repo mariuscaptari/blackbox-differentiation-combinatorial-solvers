@@ -81,7 +81,7 @@ class ShortestPathAbstractTrainer(ABC):
 
         end = time.time()
 
-        iterator = self.train_iterator.get_epoch_iterator(batch_size=self.batch_size, number_of_epochs=1, device='cuda' if self.use_cuda else 'cpu', preload=self.preload_batch)
+        iterator = self.train_iterator.get_epoch_iterator(batch_size=self.batch_size, number_of_epochs=1,device='mps' if self.use_cuda else 'cpu', preload=self.preload_batch)
         for i, data in enumerate(iterator):
             input, true_path, true_weights = data["images"], data["labels"],  data["true_weights"]
 
@@ -140,7 +140,7 @@ class ShortestPathAbstractTrainer(ABC):
 
         self.model.eval()
 
-        iterator = self.test_iterator.get_epoch_iterator(batch_size=self.batch_size, number_of_epochs=1, shuffle=False, device='cuda' if self.use_cuda else 'cpu', preload=self.preload_batch)
+        iterator = self.test_iterator.get_epoch_iterator(batch_size=self.batch_size, number_of_epochs=1, shuffle=False,device='mps' if self.use_cuda else 'cpu', preload=self.preload_batch)
 
         for i, data in enumerate(iterator):
             input, true_path, true_weights = (
@@ -150,8 +150,8 @@ class ShortestPathAbstractTrainer(ABC):
             )
 
             if self.use_cuda:
-                input = input.cuda(async=True)
-                true_path = true_path.cuda(async=True)
+                input = input.cuda(non_blocking=True)
+                true_path = true_path.cuda(non_blocking=True)
 
             loss, accuracy, last_suggestion = self.forward_pass(input, true_path, train=False, i=i)
             suggested_path = last_suggestion["suggested_path"]
@@ -246,7 +246,7 @@ class DijkstraOnFull(ShortestPathAbstractTrainer):
         if i == 0 and not train:
             print(output[0])
         assert len(weights.shape) == 3, f"{str(weights.shape)}"
-        shortest_paths = self.solver(weights)
+        shortest_paths = ShortestPath.apply(weights, self.lambda_val, self.neighbourhood_fn)
 
         loss = self.loss_fn(shortest_paths, true_shortest_paths)
 
