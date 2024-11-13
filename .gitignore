@@ -2,7 +2,7 @@
 /data/mnist_matching/
 /data/warcraft_maps/
 
-warcraft_shortest_path_oneskin/
+warcraft_shortest_path/
 *.tar.gz
 
 # Byte-compiled / optimized / DLL files
@@ -38,3 +38,6 @@ MANIFEST
 
 #MacOS
 .DS_Store
+
+#Tfevent files
+event*
