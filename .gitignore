@@ -1,8 +1,7 @@
 /data/globe_tsp/
 /data/mnist_matching/
 /data/warcraft_maps/
-
-warcraft_shortest_path/
+data/warcraft_shortest_path/
 *.tar.gz
 
 # Byte-compiled / optimized / DLL files
@@ -32,6 +31,8 @@ share/python-wheels/
 .installed.cfg
 *.egg
 MANIFEST
+.pytest*
+__init__.py
 
 # Jupyter Notebook
 .ipynb_checkpoints
